@@ -27,4 +27,4 @@ COPY --from=builder /app/target/release/tracert-map .
 COPY config.toml .
 COPY static ./static
 
-ENTRYPOINT ["./tracert-map -c config.toml -p 80"]
+CMD ["./tracert-map", "-c", "config.toml", "-p", "80"]
