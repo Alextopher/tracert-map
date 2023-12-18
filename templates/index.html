@@ -11,19 +11,27 @@
 </head>
 
 <body>
-    <h1>Traceroute Map</h1>
-    <label for="traceroute">Traceroute:</label>
-    <br>
-    <textarea id="traceroute" name="traceroute" rows="10" cols="50"></textarea>
-    <button onclick="getTrace()">Submit</button>
+    <!-- Split the page 50-50 -->
+    <div class="split">
+        <div class="content">
+            <h1>Traceroute Map</h1>
+            <p>Paste the output of <code>tracert</code> below and click submit to view the route on the map.</p>
+            <textarea id="traceroute" name="traceroute" rows="10" cols="50"></textarea>
+            <br>
+            <br>
+            <button onclick="getTrace()">Submit</button>
+            <br>
+            <br>
+            <a href="https://github.com/Alextopher/tracert-map">Source Code</a>
+        </div>
 
-    <!-- Response area -->
-    <br>
-    <div id="map"></div>
+        <!-- Response area -->
+        <div id="map"></div>
+    </div>
 
     <!-- Javascript that makes http post request to /trace with body being the traceroute input box -->
     <script>
-        var map = L.map('map').setView([51.505, -0.09], 13);
+        var map = L.map('map').setView([42.65, -73.76], 8);
         L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19,
             attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
