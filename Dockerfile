@@ -24,7 +24,6 @@ FROM rust:1.74 as runtime
 WORKDIR /app
 
 COPY --from=builder /app/target/release/tracert-map .
-COPY config.toml .
 COPY static ./static
 
 CMD ["./tracert-map", "-c", "config.toml", "-p", "80"]
