@@ -1,0 +1,14 @@
+services:
+  web:
+    build: .
+    restart: unless-stopped
+    ports:
+      - 4450:80
+    environment:
+      VIRTUAL_HOST: trace.mahoney.best
+      LETSENCRYPT_HOST: trace.mahoney.best
+
+networks:
+  default:
+    name: nginx
+    external: true

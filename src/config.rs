@@ -2,7 +2,7 @@ use serde::Deserialize;
 
 /// A simple TOML config file.
 ///
-/// At the moment it only includes the maxmind api token
+/// At the moment it only includes the ipinfo api token
 #[derive(Debug, Deserialize)]
 pub struct Config {
     pub token: String,
