@@ -20,6 +20,7 @@ a:hover {
 
 .full {
     height: 98vh;
+    overflow-y: hidden;
 }
 
 .content {
