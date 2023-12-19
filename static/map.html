@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+
+<head>
+    <title>Auto Traceroute Map</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+    <!-- Split the page 50-50 -->
+    <div class="split full">
+        <div class="content">
+            <h1>Auto Traceroute Map</h1>
+            <p>Paste the output of <code>tracert</code> or <code>traceroute</code> below and click submit to view the
+                route on the map.</p>
+            <textarea id="traceroute" name="traceroute" rows="20"></textarea>
+            <br>
+            <br>
+            <button class="large-font" onclick="getTrace()">Submit</button>
+            <br>
+            <br>
+            <div class="split">
+                <div>
+                    <a href="https://github.com/Alextopher/tracert-map" target="_blank" rel=”nofollow”>Source Code</a>
+                </div>
+                <div>
+                    <a href="http://www.openstreetmap.org/" target="_blank" rel=”nofollow”>OpenStreetMap</a>
+                </div>
+                <div>
+                    <a href="https://leafletjs.com/" target="_blank" rel=”nofollow”>Leaflet.js</a>
+                </div>
+            </div>
+
+            <!-- Put my name at the bottom -->
+            <div class="footer">
+                <p>Created by <a href="https://mahoney.best" target="_blank" rel=”nofollow”>Christopher Mahoney</a>
+                </p>
+            </div>
+        </div>
+
+        <!-- Response area -->
+        <div id="map"></div>
+    </div>
+
+    <!-- Javascript that makes http post request to /trace with body being the traceroute input box -->
+    <script>
+        var map = L.map('map').setView([42.65, -73.76], 8);
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        }).addTo(map);
+
+        function getTrace() {
+            // Get traceroute from input box and send it in the body of /trace request
+            let traceroute = document.getElementById("traceroute").value;
+
+            // Make http post request to /trace with body being the traceroute input box
+            fetch('/trace', {
+                method: 'POST',
+                body: traceroute
+            }).then(response => response.text())
+                .then(data => {
+                    let markers = data.split("\n").filter(x => x != "")
+                        .map(x => x.split(",")).map(x => {
+                            return [parseInt(x[0]), parseFloat(x[1]), parseFloat(x[2])]
+                        });
+
+                    setMarkers(markers);
+                })
+        }
+
+        function setMarkers(markers) {
+            // Remove all markers and polylines from map
+            map.eachLayer(function (layer) {
+                if (layer instanceof L.Marker || layer instanceof L.Polyline) {
+                    map.removeLayer(layer);
+                }
+            });
+
+            // Add markers to map
+            let group = new L.featureGroup();
+            for (let i = 0; i < markers.length; i++) {
+                let [hop, lat, long] = markers[i];
+
+                // Compare the long of the previous marker, if its quicker to go around the anti-meridian, do so
+                if (i > 1) {
+                    let [prevHop, prevLat, prevLong] = markers[i - 1];
+                    if (prevLong - long > 180) {
+                        long += 360;
+                        markers[i][2] += 360;
+                    } else if (prevLong - long < -180) {
+                        long -= 360;
+                        markers[i][2] -= 360;
+                    }
+                }
+
+                let marker = L.marker([lat, long]).addTo(map);
+                marker.bindPopup("Hop: " + hop);
+                group.addLayer(marker);
+            }
+
+            // Create polyline from markers
+            let polyline = L.polyline(markers.map(x => [x[1], x[2]]), { color: 'red' }).addTo(map);
+            group.addLayer(polyline);
+
+            // Zoom to fit all markers
+            map.fitBounds(group.getBounds());
+        }
+    </script>
+</body>

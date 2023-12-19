@@ -1,15 +1,19 @@
 mod config;
 mod trace;
 
-use std::{net::SocketAddr, path::PathBuf, sync::Arc};
+use std::{convert::Infallible, net::SocketAddr, path::PathBuf, sync::Arc};
 
-use axum::{extract::State, routing::post};
+use axum::{
+    extract::{Path, State},
+    http::Response,
+    routing::{get, post},
+    Json, Router,
+};
 use axum_client_ip::InsecureClientIp;
 use clap::{arg, command, value_parser};
-use ipinfo::{BatchReqOpts, IpInfo, IpInfoConfig};
+use ipinfo::{BatchReqOpts, IpDetails, IpInfo, IpInfoConfig};
 use tokio::sync::Mutex;
 use tower_http::{services::ServeDir, trace::TraceLayer};
-use tracing::info;
 
 #[tokio::main]
 async fn main() {
@@ -45,21 +49,26 @@ async fn main() {
     let geo_ip = Arc::new(Mutex::new(
         IpInfo::new(IpInfoConfig {
             token: Some(config.token),
+            cache_size: 1000,
             ..Default::default()
         })
         .unwrap(),
     ));
 
     let static_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("static");
-    info!("Serving static files from {:?}", static_dir);
+    let static_files_service = ServeDir::new(static_dir);
 
-    let static_files_service = ServeDir::new(static_dir).append_index_html_on_directories(true);
-
-    // Axum api
     let app = axum::Router::new()
         .layer(TraceLayer::new_for_http())
-        .route("/trace", post(trace))
-        .nest_service("/", static_files_service)
+        .nest_service("/static", static_files_service)
+        .route("/", get(index))
+        .route("/whois/:ip", post(whois))
+        .nest(
+            "/map",
+            Router::new()
+                .route("/", get(map))
+                .route("/trace", post(trace)),
+        )
         .with_state(geo_ip);
 
     let addr = SocketAddr::from(([0, 0, 0, 0], port));
@@ -70,6 +79,24 @@ async fn main() {
     )
     .await
     .unwrap();
+}
+
+// Returns the map.html file as html
+async fn map() -> Result<Response<String>, Infallible> {
+    let index = include_str!("../static/map.html");
+    Ok(Response::new(index.to_string()))
+}
+
+// Returns the index.html file as html
+async fn index() -> Result<Response<String>, Infallible> {
+    let index = include_str!("../static/index.html");
+    Ok(Response::new(index.to_string()))
+}
+
+// Returns additional details about a single ip address
+async fn whois(State(state): State<Arc<Mutex<IpInfo>>>, Path(ip): Path<String>) -> Json<IpDetails> {
+    let details = state.lock().await.lookup(&ip).await.unwrap();
+    Json(details)
 }
 
 // Traceroute trace to location api
