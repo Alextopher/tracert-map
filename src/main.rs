@@ -63,12 +63,8 @@ async fn main() {
         .nest_service("/static", static_files_service)
         .route("/", get(index))
         .route("/whois/:ip", post(whois))
-        .nest(
-            "/map",
-            Router::new()
-                .route("/", get(map))
-                .route("/trace", post(trace)),
-        )
+        .route("/trace", post(trace))
+        .nest("/map", Router::new().route("/", get(map)))
         .with_state(geo_ip);
 
     let addr = SocketAddr::from(([0, 0, 0, 0], port));
@@ -83,13 +79,13 @@ async fn main() {
 
 // Returns the map.html file as html
 async fn map() -> Result<Response<String>, Infallible> {
-    let index = include_str!("../static/map.html");
+    let index = include_str!("../pages/map.html");
     Ok(Response::new(index.to_string()))
 }
 
 // Returns the index.html file as html
 async fn index() -> Result<Response<String>, Infallible> {
-    let index = include_str!("../static/index.html");
+    let index = include_str!("../pages/index.html");
     Ok(Response::new(index.to_string()))
 }
 
