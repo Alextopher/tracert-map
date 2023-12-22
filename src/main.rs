@@ -91,11 +91,12 @@ async fn index() -> Result<Response<String>, Infallible> {
 
 // Returns additional details about a single ip address
 async fn whois(State(state): State<Arc<Mutex<IpInfo>>>, Path(ip): Path<String>) -> Json<IpDetails> {
-    let details = state.lock().await.lookup(&ip).await.unwrap();
+    let details = state.lock().await.lookup(ip.trim()).await.unwrap();
     Json(details)
 }
 
-// Traceroute trace to location api
+// Parses a string that looks like a traceroute / tracert output and extracts
+// the ip addresses, then looks up the location of each ip address.
 //
 // POST /trace
 async fn trace(
