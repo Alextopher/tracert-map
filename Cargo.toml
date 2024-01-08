@@ -7,7 +7,7 @@ edition = "2021"
 axum = "0.7.2"
 clap = { version = "4.4.11", features = ["cargo"] }
 regex = "1.10.2"
-serde = { version = "1.0.193", features = ["derive"] }
+serde = { version = "1.0.195", features = ["derive"] }
 tokio = { version = "1.35.0", features = ["rt"] }
 toml = "0.8.8"
 tracing = "0.1.40"
