@@ -15,7 +15,8 @@ tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
 anyhow = "1.0"
 tower = { version = "0.4", features = ["limit", "buffer"] }
 tower-http = { version = "0.5", features = ["fs", "trace"] }
-axum-client-ip = "0.5"
+axum-client-ip = "0.6"
+env_logger = "0.11.3"
 
 # ipinfo = "3.0.0"
 ipinfo = { git = "https://github.com/Alextopher/ipinfo.git", branch = "memory" }

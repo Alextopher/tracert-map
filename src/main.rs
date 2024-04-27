@@ -11,13 +11,14 @@ use axum::{
 };
 use axum_client_ip::InsecureClientIp;
 use clap::{arg, command, value_parser};
+use env_logger::Env;
 use ipinfo::{BatchReqOpts, IpDetails, IpInfo, IpInfoConfig};
 use tokio::sync::Mutex;
 use tower_http::{services::ServeDir, trace::TraceLayer};
 
 #[tokio::main]
 async fn main() {
-    tracing_subscriber::fmt().init();
+    env_logger::init_from_env(Env::default().default_filter_or("info"));
 
     // Clap path to config file
     let matches = command!() // requires `cargo` feature
