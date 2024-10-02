@@ -63,7 +63,7 @@ async fn main() {
         .layer(TraceLayer::new_for_http())
         .nest_service("/static", static_files_service)
         .route("/", get(index))
-        .route("/whois/:ip", post(whois))
+        .route("/whois/:ip", post(geoip))
         .route("/trace", post(trace))
         .nest("/map", Router::new().route("/", get(map)))
         .with_state(geo_ip);
@@ -91,13 +91,13 @@ async fn index() -> Result<Response<String>, Infallible> {
 }
 
 // Returns additional details about a single ip address
-async fn whois(State(state): State<Arc<Mutex<IpInfo>>>, Path(ip): Path<String>) -> Json<IpDetails> {
+async fn geoip(State(state): State<Arc<Mutex<IpInfo>>>, Path(ip): Path<String>) -> Json<IpDetails> {
     let details = state.lock().await.lookup(ip.trim()).await.unwrap();
     Json(details)
 }
 
 // Parses a string that looks like a traceroute / tracert output and extracts
-// the ip addresses, then looks up the location of each ip address.
+// the ip addresses and then looks up the location of each ip address.
 //
 // POST /trace
 async fn trace(
