@@ -21,6 +21,12 @@ token = "put token here"
 cargo run --release -- -c config.toml
 ```
 
+4. Optionally, you can use a docker container
+
+```sh
+docker run -v ./config.toml:/app/config.toml -p 4460:80 alextopher/tracert-map:latest
+```
+
 ## Design
 
 This server is written in [Rust](https://www.rust-lang.org/). It uses the [axum](https://crate.io/crates/axum) web framework and using [leaflet](https://leafletjs.com/) + [openstreetmap](https://www.openstreetmap.org/) for the map.

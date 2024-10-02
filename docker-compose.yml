@@ -4,13 +4,5 @@ services:
     restart: unless-stopped
     ports:
       - 4450:80
-    environment:
-      VIRTUAL_HOST: trace.mahoney.best
-      LETSENCRYPT_HOST: trace.mahoney.best
     volumes:
       - ./config.toml:/app/config.toml
-
-networks:
-  default:
-    name: nginx
-    external: true

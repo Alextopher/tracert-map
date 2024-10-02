@@ -3,7 +3,15 @@ name = "tracert-map"
 version = "0.2.0"
 edition = "2021"
 
+[profile.release]
+opt-level = "s"
+strip = true
+lto = true
+
 [dependencies]
+# required to build for musl target
+openssl = { version = "0.10", features = ["vendored"] }
+
 axum = "0.7"
 clap = { version = "4.4", features = ["cargo"] }
 regex = "1.10"
@@ -13,8 +21,8 @@ toml = "0.8"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
 anyhow = "1.0"
-tower = { version = "0.4", features = ["limit", "buffer"] }
-tower-http = { version = "0.5", features = ["fs", "trace"] }
+tower = { version = "0.5", features = ["limit", "buffer"] }
+tower-http = { version = "0.6", features = ["fs", "trace"] }
 axum-client-ip = "0.6"
 env_logger = "0.11.3"
 

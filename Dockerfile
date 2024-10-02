@@ -1,29 +1,33 @@
-# Plan using cargo-chef
-FROM rust:1.74 as planner
-WORKDIR /app
-RUN cargo install cargo-chef 
-COPY . .
-RUN cargo chef prepare  --recipe-path recipe.json
+# Builder
+FROM rust:latest AS builder
+RUN apt update && apt upgrade -y && \
+    apt install -y musl-tools musl-dev libssl-dev pkg-config
 
-# Cache dependencies
-FROM rust:1.74 as cacher
-WORKDIR /app
-RUN cargo install cargo-chef
-COPY --from=planner /app/recipe.json recipe.json
-RUN cargo chef cook --release --recipe-path recipe.json
+RUN rustup target add x86_64-unknown-linux-musl
 
-# Build
-FROM rust:1.74 as builder
-WORKDIR /app
-COPY . .
-COPY --from=cacher /app/target target
-RUN cargo build --release
-
-# Runtime
-FROM rust:1.74 as runtime
 WORKDIR /app
 
-COPY --from=builder /app/target/release/tracert-map .
+COPY Cargo.toml Cargo.lock ./
+
+RUN mkdir src
+RUN echo "fn main() {panic!(\"if you see this, the build is broken\")}" > src/main.rs
+
+RUN cargo build --release --target x86_64-unknown-linux-musl
+
+COPY src ./src
+COPY pages ./pages
+
+RUN rm target/x86_64-unknown-linux-musl/release/deps/tracert_map*
+RUN cargo build --release --target x86_64-unknown-linux-musl
+
+# FINAL
+FROM alpine:latest
+
+WORKDIR /app
+
+RUN apk add --no-cache bash
+
 COPY static ./static
+COPY --from=builder /app/target/x86_64-unknown-linux-musl/release/tracert-map .
 
 CMD ["./tracert-map", "-c", "config.toml", "-p", "80"]
