@@ -102,11 +102,11 @@ async fn geoip(State(state): State<Arc<Mutex<IpInfo>>>, Path(ip): Path<String>) 
 // POST /trace
 async fn trace(
     State(state): State<Arc<Mutex<IpInfo>>>,
-    insecure_ip: InsecureClientIp,
+    InsecureClientIp(ip): InsecureClientIp,
     trace: String,
 ) -> String {
     // The first ip address is the ip of the client (as a string)
-    let client_ip = insecure_ip.0.to_string();
+    let client_ip = ip.to_string();
 
     // Parse the trace into a vector of ip addresses
     let mut ips = trace::parse_trace(&trace);
